@@ -13,6 +13,8 @@ register_asset 'stylesheets/common.scss'
 after_initialize do
   register_editable_user_custom_field(:featured_badges)
   
+
+  
   add_to_serializer(:user, :custom_fields) { object.custom_fields }
   add_to_serializer(:user, :badges) do
     badges = []
@@ -40,9 +42,10 @@ after_initialize do
     if custom_fields['featured_badges'] != nil && (
         featured_badges = custom_fields['featured_badges'].split(',').map(&:to_i)
       ).present?
-      badges.select { |b| featured_badges.include?(b.id) }.uniq
+      badges.select { |b| featured_badges.include?(b.id) }.uniq.take(3)
     else
       []
     end
   end
 end
+
