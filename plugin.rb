@@ -2,7 +2,7 @@
 
 # name: discourse-post-badges-plugin
 # about: A plugin built based on the Official Discourse Post Badges Theme Component
-# version: 0.3
+# version: 0.4
 # authors: Faizaan Gagan
 # url: https://github.com/paviliondev/discourse-post-badges-plugin
 # based on: https://github.com/discourse/discourse-post-badges

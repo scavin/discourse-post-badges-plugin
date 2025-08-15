@@ -1,8 +1,8 @@
-import { schedule } from "@ember/runloop";
-import { hbs } from "ember-cli-htmlbars";
+import Component from "@ember/component";
+import { service } from "@ember/service";
 import { makeArray } from "discourse/lib/helpers";
 import { withPluginApi } from "discourse/lib/plugin-api";
-import { registerWidgetShim } from "discourse/widgets/render-glimmer";
+import PostUserFeaturedBadges from "../components/post-user-featured-badges";
 
 const BADGE_CLASS = [
   "badge-type-gold",
@@ -37,9 +37,9 @@ function loadUserBadges({ allBadges, username, linkDestination }) {
   });
 }
 
-function addHighestTLClassname(widget, badges) {
-  if (!widget || !badges) {
-    return;
+function highestTLClassname(badges) {
+  if (!badges) {
+    return "";
   }
 
   let trustLevel = "";
@@ -52,9 +52,7 @@ function addHighestTLClassname(widget, badges) {
     }
   });
 
-  if (trustLevel) {
-    widget._componentInfo.element.classList.add(trustLevel);
-  }
+  return trustLevel || "";
 }
 
 export default {
@@ -71,31 +69,41 @@ export default {
         containerClassname.push("show-highest");
       }
 
-      registerWidgetShim(
-        "featured-badges",
-        `div.${containerClassname.join(".")}`,
-        hbs`<PostUserFeaturedBadges @badges={{@data.badges}} @tagName="" />`
-      );
+      api.addTrackedPostProperties("user_badges");
 
-      api.includePostAttributes("user_badges");
+      const component = class extends Component {
+        @service siteSettings;
 
-      api.decorateWidget(`poster-name:${location}`, (decorator) => {
-        const { user_badges: allBadges, username } = decorator.attrs;
-        const linkDestination = siteSettings.post_badges_badge_link_destination;
-        const badges = loadUserBadges({
-          allBadges,
-          username,
-          linkDestination,
-        });
+        get badges() {
+          const { user_badges: allBadges, username } = this.outletArgs.post;
+          const linkDestination =
+            this.siteSettings.post_badges_badge_link_destination;
 
-        const widget = decorator.attach("featured-badges", { badges });
+          return loadUserBadges({
+            allBadges,
+            username,
+            linkDestination,
+          });
+        }
 
-        schedule("afterRender", () => {
-          addHighestTLClassname(widget, badges);
-        });
+        get classnames() {
+          return [...containerClassname, highestTLClassname(this.badges)]
+            .filter(Boolean)
+            .join(" ");
+        }
 
-        return widget;
-      });
+        <template>
+          <div class={{this.classnames}}>
+            <PostUserFeaturedBadges @badges={{this.badges}} @tagName="" />
+          </div>
+        </template>
+      };
+
+      if (location === "before") {
+        api.renderBeforeWrapperOutlet("post-meta-data-poster-name", component);
+      } else {
+        api.renderAfterWrapperOutlet("post-meta-data-poster-name", component);
+      }
     });
   },
 };
