@@ -103,25 +103,31 @@ export default {
       };
 
       // Register both outlets and let the component decide when to render
-      api.renderBeforeWrapperOutlet("post-meta-data-poster-name", class extends component {
-        <template>
-          {{#if this.shouldRenderBefore}}
-            <div class={{this.classnames}}>
-              <PostUserFeaturedBadges @badges={{this.badges}} @tagName="" />
-            </div>
-          {{/if}}
-        </template>
-      });
+      api.renderBeforeWrapperOutlet(
+        "post-meta-data-poster-name",
+        class extends component {
+          <template>
+            {{#if this.shouldRenderBefore}}
+              <div class={{this.classnames}}>
+                <PostUserFeaturedBadges @badges={{this.badges}} @tagName="" />
+              </div>
+            {{/if}}
+          </template>
+        }
+      );
 
-      api.renderAfterWrapperOutlet("post-meta-data-poster-name", class extends component {
-        <template>
-          {{#unless this.shouldRenderBefore}}
-            <div class={{this.classnames}}>
-              <PostUserFeaturedBadges @badges={{this.badges}} @tagName="" />
-            </div>
-          {{/unless}}
-        </template>
-      });
+      api.renderAfterWrapperOutlet(
+        "post-meta-data-poster-name",
+        class extends component {
+          <template>
+            {{#unless this.shouldRenderBefore}}
+              <div class={{this.classnames}}>
+                <PostUserFeaturedBadges @badges={{this.badges}} @tagName="" />
+              </div>
+            {{/unless}}
+          </template>
+        }
+      );
     });
   },
 };
