@@ -61,8 +61,6 @@ export default {
   initialize(container) {
     withPluginApi((api) => {
       const siteSettings = container.lookup("service:site-settings");
-      const isMobileView = container.lookup("service:site").mobileView;
-      const location = isMobileView ? "before" : "after";
 
       let containerClassname = ["poster-icon-container"];
       if (siteSettings.post_badges_only_show_highest_trust_level) {
@@ -73,6 +71,7 @@ export default {
 
       const component = class extends Component {
         @service siteSettings;
+        @service site;
 
         get badges() {
           const { user_badges: allBadges, username } = this.outletArgs.post;
@@ -92,6 +91,10 @@ export default {
             .join(" ");
         }
 
+        get shouldRenderBefore() {
+          return this.site.mobileView;
+        }
+
         <template>
           <div class={{this.classnames}}>
             <PostUserFeaturedBadges @badges={{this.badges}} @tagName="" />
@@ -99,11 +102,32 @@ export default {
         </template>
       };
 
-      if (location === "before") {
-        api.renderBeforeWrapperOutlet("post-meta-data-poster-name", component);
-      } else {
-        api.renderAfterWrapperOutlet("post-meta-data-poster-name", component);
-      }
+      // Register both outlets and let the component decide when to render
+      api.renderBeforeWrapperOutlet(
+        "post-meta-data-poster-name",
+        class extends component {
+          <template>
+            {{#if this.shouldRenderBefore}}
+              <div class={{this.classnames}}>
+                <PostUserFeaturedBadges @badges={{this.badges}} @tagName="" />
+              </div>
+            {{/if}}
+          </template>
+        }
+      );
+
+      api.renderAfterWrapperOutlet(
+        "post-meta-data-poster-name",
+        class extends component {
+          <template>
+            {{#unless this.shouldRenderBefore}}
+              <div class={{this.classnames}}>
+                <PostUserFeaturedBadges @badges={{this.badges}} @tagName="" />
+              </div>
+            {{/unless}}
+          </template>
+        }
+      );
     });
   },
 };
